@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "trajectoryfabric",
+  "version": "${version}",
+
+  "name": "Trajectory Fabric",
+  "description": "Predicts the Trajectory of projectiles",
+  "authors": [
+    "Segovo"
+  ],
+  "contact": {
+    "homepage": "https://NA.net/",
+    "sources": "https://github.com/NA/NA"
+  },
+
+  "license": "CC0-1.0",
+  "icon": "assets/modid/icon.png",
+
+  "environment": "client",
+  "entrypoints": {
+    "client": [ "net.Segovo.TrajectoryFabric.TrajectoryFabric" ],
+    "cotton-client-commands": ["net.Segovo.TrajectoryFabric.TrajectoryCommands"]
+  },
+  "mixins": [
+
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.7.4",
+    "fabric": "*",
+    "minecraft": "1.16.x"
+  },
+  "suggests": {
+    "flamingo": "*"
+  }
+}
