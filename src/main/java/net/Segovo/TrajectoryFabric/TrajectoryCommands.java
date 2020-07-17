@@ -78,14 +78,9 @@ public class TrajectoryCommands implements ClientCommandPlugin {
     }
 
     public String describeColor(int r, int g, int b) {
-        int tempr = 1;
-        int tempg = 1;
-        int tempb = 1;
-        int tempreturnnum = 999;
-
         double lastSmallestDistance = Double.MAX_VALUE;
         String returnColor = "null";
-        for (int i = 0, color_i = 0; color_i < altColorNames.length; i=i+3, color_i++) {
+        for (int i = 0, color_i = 0; color_i < colorNames.length; i=i+3, color_i++) {
             //float rgbDistance = Math.abs(r - colorRGBs[i]) +
                        // Math.abs(g - colorRGBs[i+1]) +
                         //Math.abs(b - colorRGBs[i+2]);
@@ -94,16 +89,9 @@ public class TrajectoryCommands implements ClientCommandPlugin {
                     + Math.pow((b-colorRGBs[i+2]), 2);
             if (rgbDistance < lastSmallestDistance) {
                 lastSmallestDistance = rgbDistance;
-                returnColor = altColorNames[color_i];
-                tempr = colorRGBs[i];
-                tempg = colorRGBs[i+1];
-                tempb = colorRGBs[i+2];
-                tempreturnnum = color_i;
+                returnColor = colorNames[color_i];
               }
         }
-        System.out.println("lastSmallestDistance: " + lastSmallestDistance);
-        System.out.println("rgb: " + tempr + ", " + tempg + ", " + tempb);
-        System.out.println("returned @ " + tempreturnnum);
         return returnColor;
     }
 
@@ -249,149 +237,7 @@ public class TrajectoryCommands implements ClientCommandPlugin {
             "white"
     };
 
-    String[] altColorNames = {
-        "maroon",
-        "dark red",
-        "brown cow",
-        "firebrick",
-        "nether brick",
-        "red blood",
-        "tomato soup",
-        "coral",
-        "indian red",
-        "light coral",
-        "dark salmon",
-        "salmon",
-        "light salmon",
-        "lava red",
-        "dark lava",
-        "lava",
-        "gold",
-        "dark golden rod",
-        "golden rod",
-        "pale golden rod",
-        "dark khaki",
-        "khaki",
-        "olive",
-        "yellow",
-        "yellow grass",
-        "dark olive grass",
-        "olive drab",
-        "lawn grass",
-        "chart reuse",
-        "grass yellow",
-        "dark grass",
-        "grass",
-        "forest grass",
-        "lime",
-        "lime grass",
-        "light grass",
-        "pale grass",
-        "dark sea grass",
-        "medium spring grass",
-        "spring grass",
-        "sea grass",
-        "medium aqua marine",
-        "medium sea grass",
-        "light sea grass",
-        "dark slate gray",
-        "teal",
-        "dark cyan",
-        "aqua",
-        "cyan",
-        "light cyan",
-        "dark turquoise",
-        "turquoise",
-        "medium turquoise",
-        "pale turquoise",
-        "aqua marine",
-        "powder water",
-        "cadet water",
-        "steel water",
-        "corn flower water",
-        "deep sky water",
-        "dodger water",
-        "light water",
-        "sky water",
-        "light sky water",
-        "midnight water",
-        "navy",
-        "dark water",
-        "medium water",
-        "water",
-        "royal water",
-        "water violet",
-        "indigo",
-        "dark slate water",
-        "slate water",
-        "medium slate water",
-        "medium purple",
-        "dark magenta",
-        "dark violet",
-        "dark orchid",
-        "medium orchid",
-        "purple",
-        "thistle",
-        "plum",
-        "violet",
-        "magenta",
-        "orchid",
-        "medium violet red",
-        "pale violet red",
-        "deep pink",
-        "super duper pink",
-        "light pink",
-        "pink",
-        "antique white",
-        "beige",
-        "bisque",
-        "blanched almond",
-        "wheat",
-        "corn silk",
-        "lemon chiffon",
-        "light golden rod yellow",
-        "light yellow",
-        "saddle brown",
-        "sienna",
-        "chocolate",
-        "peru",
-        "sandy brown",
-        "burly wood",
-        "tan",
-        "rosy brown",
-        "moccasin",
-        "navajo white",
-        "peach puff",
-        "misty rose",
-        "lavender blush",
-        "linen",
-        "old lace",
-        "papaya whip",
-        "sea shell",
-        "mint cream",
-        "slate gray",
-        "light slate gray",
-        "light steel blue",
-        "lavender",
-        "floral white",
-        "alice blue",
-        "ghost white",
-        "honeydew",
-        "ivory",
-        "azure",
-        "snowy mountain",
-        "black",
-        "dim gray",
-        "gray",
-        "dark gray",
-        "silver",
-        "light gray",
-        "gainsboro",
-        "white smoke",
-        "white"
-         };
-
-      int[] colorRGBs = {
+  int[] colorRGBs = {
         128,0,0,
         139,0,0,
         165,42,42,
@@ -531,7 +377,7 @@ public class TrajectoryCommands implements ClientCommandPlugin {
         220,220,220,
         245,245,245,
         255,255,255
-         };
+  };
 
 
 }

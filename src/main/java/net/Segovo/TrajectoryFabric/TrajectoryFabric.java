@@ -180,23 +180,6 @@ public class TrajectoryFabric implements ClientModInitializer {
 		});
 
 		HudRenderCallback.EVENT.register((matrixStack, tickDelta) -> {
-			//this.fontRenderer.draw(matrixStack, "ElytraHud", 2.0F, 10.0F, 14737632);
-			/*
-			Camera camera = client.gameRenderer.getCamera();
-			PlayerEntity playerEntity = client.player;
-			BlockPos blockPos = new BlockPos(playerEntity.getX(), playerEntity.getY(), playerEntity.getZ());
-			float pitch = playerEntity.getPitch(MinecraftClient.getInstance().getTickDelta());
-			float yaw = playerEntity.getYaw(MinecraftClient.getInstance().getTickDelta());
-
-
-			MinecraftClient.getInstance().textRenderer.draw(matrixStack, String.valueOf(camera.getPos().x), 2.0F, 10.0F, Color.CYAN.getRGB());
-			MinecraftClient.getInstance().textRenderer.draw(matrixStack, String.valueOf(camera.getPos().y), 2.0F, 20.0F, Color.CYAN.getRGB());
-			MinecraftClient.getInstance().textRenderer.draw(matrixStack, String.valueOf(camera.getPos().x), 2.0F, 30.0F, Color.CYAN.getRGB());
-
-			MinecraftClient.getInstance().textRenderer.draw(matrixStack, String.valueOf(blockPos.getX()), 2.0F, 50.0F, Color.RED.getRGB());
-			MinecraftClient.getInstance().textRenderer.draw(matrixStack, String.valueOf(yaw), 2.0F, 60.0F, Color.RED.getRGB());
-			MinecraftClient.getInstance().textRenderer.draw(matrixStack, String.valueOf(pitch), 2.0F, 70.0F, Color.RED.getRGB());
-			*/
 		});
 
 		System.out.println("Hello from TrajectoryFabric!");
@@ -205,77 +188,3 @@ public class TrajectoryFabric implements ClientModInitializer {
 
 
 }
-//Hvelocity = Hvelocity * 0.98;
-//Vvelocity = 0.98 * (Vvelocity * (xdistance - 1) - 0.08);
-//ydistance = ydistance + Vvelocity;
-//GL11.glVertex3d(.01 - d0,.01 - d1,.01 - d2);
-//GL11.glVertex3d(.01 + xdistance - d0, .01 + ydistance - d1,.01 + zdistance - d2);
-//double Vvelocity = Math.sin(Math.toRadians(pitch*-1))*1.5D;
-//double Hvelocity = Math.sin(Math.toRadians(pitch*-1))*1.5D;
-/* 		GL11.glVertex3d(  .01 - d0,  .01 - d1,  .01 - d2);
-		GL11.glVertex3d(  .01 + 1 - d0,  .01 - d1,  .01 + 1 - d2);
-		GL11.glVertex3d(  .01 + 1 - d0,   .01 - d1,  .01 - d2);
-		GL11.glVertex3d(   .01 - d0,   .01 - d1,  .01 + 1 - d2);
-
- */
-//    "trajectoryfabric.mixins.json"
-
-		/*
-		AutoConfig.register(TrajectoryConfig.class, GsonConfigSerializer::new);
-		keyBinding = new KeyBinding(
-				"key.TrajectoryFabric.config", // The translation key of the keybinding's name
-				InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
-				GLFW.GLFW_KEY_L, // The keycode of the key
-				"category.TrajectoryFabric.keybinds" // The translation key of the keybinding's category.
-		);
-		KeyBindingHelper.registerKeyBinding(keyBinding);
-
-		Screen screen = MinecraftClient.getInstance().currentScreen;
-		//noinspection deprecation
-		ClientTickCallback.EVENT.register(client -> {
-			while (keyBinding.wasPressed()) System.out.println("was pressed!");
-
-		});
-
-		for (int i = 1; i < (lineRes*25); i++) {
-			xdistance = i/(lineRes/4);
-
-
-			double straightX = xdistance * Math.cos(Math.toRadians(angle)) + zdistance * Math.sin(Math.toRadians(angle));
-			double straightZ = xdistance * Math.sin(Math.toRadians(angle)) + zdistance * Math.cos(Math.toRadians(angle));
-
-			double deltaX = .01 + straightX + pX;
-			double deltaZ = .01 + straightZ + pZ;
-
-			Math.atan2(deltaZ - + 1, deltaX + 1);
-			double newX = xdistance * Math.cos(Math.toRadians(angle+2)) + zdistance * Math.sin(Math.toRadians(angle+2));
-			double newZ = xdistance * Math.sin(Math.toRadians(angle+2)) + zdistance * Math.cos(Math.toRadians(angle+2));
-
-			double offsetX = 0 * Math.cos(Math.toRadians(angle*-1)) + 1 * Math.sin(Math.toRadians(angle*-1));
-			double offsetZ = 0 * Math.sin(Math.toRadians(angle*-1)) + 1 * Math.cos(Math.toRadians(angle*-1));
-			ydistance = 0 + xdistance * Math.tan(Math.toRadians(pitch*-1)) - (Math.pow((gravity * xdistance), 2))/(2*Math.pow(velocity*Math.cos(Math.toRadians(pitch*-1)), 2));
-
-			BlockPos futureBlock = new BlockPos(deltaX, .01 + ydistance + pY + 1, deltaZ);
-			BlockState futureBlockState = world.getBlockState(futureBlock);
-
-			GL11.glVertex3d(.01 + prevX + offsetX, .01 + prevY, .01 + prevZ + offsetZ);
-			GL11.glVertex3d(.01 + newX + offsetX, .01 + ydistance, .01 + newZ + offsetZ);
-
-			prevX = newX;
-			prevY = ydistance;
-			prevZ = newZ;
-
-			if (futureBlockState.isFullCube(world, futureBlock) & trigger == false) {
-				GL11.glVertex3d(futureBlock.getX() - d0, futureBlock.getY() + 1.1 - d1, futureBlock.getZ() + 1 - d2);
-				GL11.glVertex3d(futureBlock.getX() + 1 - d0, futureBlock.getY() + 1.1 - d1, futureBlock.getZ() - d2);
-				GL11.glVertex3d(futureBlock.getX() + 1 - d0, futureBlock.getY() + 1.1 - d1, futureBlock.getZ() + 1 - d2);
-				GL11.glVertex3d(futureBlock.getX() - d0, futureBlock.getY() + 1.1 - d1, futureBlock.getZ() - d2);
-				trigger = true;
-			}
-			if (trigger == true) {
-				extrasteps++;
-				if (extrasteps > 20) {
-					return;
-				}
-			}
-		*/
