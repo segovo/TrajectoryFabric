@@ -41,29 +41,6 @@ public class TrajectoryCommands implements ClientCommandPlugin {
                                                         })
 
                                                 )))))
-                .then(literal("lineRes")
-                        .then(literal("low").executes(context -> {
-                            config.set("lineRes", 2);
-                            config.save();
-                            TrajectoryFabric.remoteLoadConfig();
-                            sendPrivateMessage(new TranslatableText("lineRes.set", "low"));
-                            return 1;
-                        }))
-                        .then(literal("medium").executes(context -> {
-                            config.set("lineRes", 4);
-                            config.save();
-                            TrajectoryFabric.remoteLoadConfig();
-                            sendPrivateMessage(new TranslatableText("lineRes.set", "medium"));
-                            return 1;
-                        }))
-                        .then(literal("high").executes(context -> {
-                            config.set("lineRes", 8);
-                            config.save();
-                            TrajectoryFabric.remoteLoadConfig();
-                            sendPrivateMessage(new TranslatableText("lineRes.set", "high"));
-                            return 1;
-                        }))
-                )
         );
     }
 
