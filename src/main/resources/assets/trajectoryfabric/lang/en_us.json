@@ -1,4 +1,6 @@
 {
   "lineRes.set": "Line resolution set to %s",
-  "lineColor.set": "Line color set to %s"
+  "lineColor.set": "Line color set to %s",
+  "arrowTrajectory.true": "Arrow trajectory visualization turned on",
+  "arrowTrajectory.false": "Arrow trajectory visualization turned off"
 }

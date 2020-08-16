@@ -46,6 +46,17 @@ public class TrajectoryFabric implements ClientModInitializer {
 	public boolean checkConfig() {
 		config.load();
 
+		//Bow update
+		Optional<Integer> trajectory = config.getOptional("arrowTrajectory");
+		if(!trajectory.isPresent()) {
+			System.out.println("arrowTrajectory missing from Config!");
+			config.set("arrowTrajectory", true);
+			config.save();
+			config.load();
+		} else {
+
+		}
+
 		Optional<Integer> version = config.getOptional("version");
 		if(!version.isPresent()) {
 			System.out.println("No Config!");
@@ -54,6 +65,7 @@ public class TrajectoryFabric implements ClientModInitializer {
 			config.set("lineColorG", 255);
 			config.set("lineColorB", 255);
 			config.set("lineColorA", 100);
+			config.set("arrowTrajectory", true);
 			config.save();
 			config.load();
 			return false;
@@ -62,10 +74,16 @@ public class TrajectoryFabric implements ClientModInitializer {
 			return true;
 		}
 
+
+
 	}
 
 	public static void setVelocity() {
 
+	}
+
+	public int[] getConfigColor() {
+		return new int[] {config.get("lineColorR"), config.get("lineColorG"), config.get("lineColorB"), config.get("lineColorA")};
 	}
 
 	public static void renderBox(double x1, double y1, double z1, double x2, double y2, double z2) {
@@ -107,7 +125,7 @@ public class TrajectoryFabric implements ClientModInitializer {
 
 	}
 
-	public static void renderCurve(Camera camera, World world, BlockPos pos, float pitch, float yaw, double eye, PlayerEntity player, int[] color) {
+	public static void renderCurve(Camera camera, World world, BlockPos pos, float pitch, float yaw, double eye, PlayerEntity player, int[] color, float speed, float gravity) {
 		double d0 = camera.getPos().x;
 		double d1 = camera.getPos().y - .005D;
 		double d2 = camera.getPos().z;
@@ -121,9 +139,7 @@ public class TrajectoryFabric implements ClientModInitializer {
 		// Simulation
 		RenderSystem.color4f(color[0] / 255f, color[1] / 255f, color[2] / 255f, (float)color[3]/100);
 
-		float speed = 1.5f;
-		//float divergence = 1.0f;
-		float ngravity = 0.03f;
+		//float ngravity = 0.03f;
 		float drag = 0.99f;
 
 		float entityVelX = -MathHelper.sin(yaw * 0.017453292F) * MathHelper.cos(pitch * 0.017453292F);
@@ -139,7 +155,6 @@ public class TrajectoryFabric implements ClientModInitializer {
 		double offsetZ = 0 * Math.sin(Math.toRadians((yaw+90)*-1)) + 1 * Math.cos(Math.toRadians((yaw+90)*-1));
 		double prevX = 0;
 		double prevZ = 0;
-	//	double prevZ = accurateZ;
 
 		SnowballEntity tempEntity = new SnowballEntity(world, player);
 
@@ -147,7 +162,7 @@ public class TrajectoryFabric implements ClientModInitializer {
 			HitResult hitResult = world.rayTrace(new RayTraceContext(new Vec3d(accurateX + entityPosition.x, accurateY + entityPosition.y, accurateZ + entityPosition.z), new Vec3d(accurateX + entityPosition.x, accurateY + entityPosition.y, accurateZ + entityPosition.z).add(entityVelocity), RayTraceContext.ShapeType.OUTLINE, RayTraceContext.FluidHandling.NONE, tempEntity));
 			if (hitResult.getType() != HitResult.Type.MISS) {
 				double hitDistance = hitResult.getPos().distanceTo(player.getPos());
-				double boxSize = hitDistance > 20 ? hitDistance/40 : 0.5;
+				double boxSize = hitDistance > 30 ? hitDistance/70 : 0.5;
 				double defaultBoxSize = 0.5; // 0.5 = full block
 				renderBox(hitResult.getPos().x - defaultBoxSize - d0, hitResult.getPos().y - defaultBoxSize - d1, hitResult.getPos().z - defaultBoxSize - d2, hitResult.getPos().x + defaultBoxSize - d0, hitResult.getPos().y + defaultBoxSize - d1, hitResult.getPos().z + defaultBoxSize - d2);
 				renderBox(hitResult.getPos().x - boxSize - d0, hitResult.getPos().y - boxSize - d1, hitResult.getPos().z - boxSize - d2, hitResult.getPos().x + boxSize - d0, hitResult.getPos().y + boxSize - d1, hitResult.getPos().z + boxSize - d2);
@@ -160,7 +175,7 @@ public class TrajectoryFabric implements ClientModInitializer {
 
 			entityPosition = entityPosition.add(entityVelocity);
 			entityVelocity = entityVelocity.multiply(drag);
-			entityVelocity = new Vec3d(entityVelocity.x, entityVelocity.y - ngravity, entityVelocity.z);
+			entityVelocity = new Vec3d(entityVelocity.x, entityVelocity.y - gravity, entityVelocity.z);
 			double newX = entityPosition.x * Math.cos(angleToHit-1.5708) - entityPosition.z * Math.sin(angleToHit-1.5708); // Rotation to point trajectory curve towards hit mark.
 			double newZ = entityPosition.x * Math.sin(angleToHit-1.5708) + entityPosition.z * Math.cos(angleToHit-1.5708); //
 
@@ -180,11 +195,14 @@ public class TrajectoryFabric implements ClientModInitializer {
 		config.load();
 
 		// Rendering
-		Set<Item> items = new HashSet<Item>();
-		items.add(Items.ENDER_PEARL.asItem());
-		items.add(Items.SNOWBALL.asItem());
+		Set<Item> itemsSimple = new HashSet<Item>();
+		itemsSimple.add(Items.ENDER_PEARL.asItem());
+		itemsSimple.add(Items.SNOWBALL.asItem());
 		//items.add(Items.SPLASH_POTION.asItem());
-		items.add(Items.EGG.asItem());
+		itemsSimple.add(Items.EGG.asItem());
+
+		Set<Item> itemsComplex = new HashSet<Item>();
+		itemsComplex.add(Items.BOW.asItem());
 
 		MinecraftClient client = MinecraftClient.getInstance();
 		ClothClientHooks.DEBUG_RENDER_PRE.register(() -> {
@@ -205,9 +223,20 @@ public class TrajectoryFabric implements ClientModInitializer {
 			double eye = playerEntity.getEyeY();
 			ItemStack itemStack = playerEntity.getMainHandStack();
 
-			if (items.contains(itemStack.getItem())) {
-				int[] color = {config.get("lineColorR"), config.get("lineColorG"), config.get("lineColorB"), config.get("lineColorA")};
-				TrajectoryFabric.renderCurve(camera, world, blockPos, pitch, yaw, eye, playerEntity, color);
+			if (itemsSimple.contains(itemStack.getItem())) {
+				float speed = 1.5f;
+				int[] color = getConfigColor();
+				TrajectoryFabric.renderCurve(camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.03f);
+			} else if (itemsComplex.contains(itemStack.getItem()) && (boolean)config.get("arrowTrajectory")) {
+				float bowMultiplier = (72000.0f - playerEntity.getItemUseTimeLeft()) / 20.0f;
+				bowMultiplier = (bowMultiplier * bowMultiplier + bowMultiplier * 2.0f) / 3.0f;
+				if (bowMultiplier > 1.0f) {
+					bowMultiplier = 1.0f;
+				}
+
+				float speed = bowMultiplier * 3.0f;
+				int[] color = getConfigColor();
+				TrajectoryFabric.renderCurve(camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.05f);
 			}
 
 
@@ -226,125 +255,3 @@ public class TrajectoryFabric implements ClientModInitializer {
 
 
 }
-//double angleToHit = Math.atan2(projectileHit.getZ() - (pZ + offsetZ), projectileHit.getX() - (pX + offsetX));
-			/*double newX = entityPosition.x * Math.cos(Math.toRadians(angle+20)) + zdistance * Math.sin(Math.toRadians(angle+20));
-			double newZ = entityPosition.x * Math.sin(Math.toRadians(angle+20)) + zdistance * Math.cos(Math.toRadians(angle+20));
-			GL11.glVertex3d(.01 + newX + offsetX, .01 + entityPosition.y, .01 + newZ + offsetZ);
-
-			entityPosition = entityPosition.add(entityVelocity);
-
-			entityVelocity = entityVelocity.multiply(drag);
-			entityVelocity = new Vec3d(entityVelocity.x, entityVelocity.y - ngravity, entityVelocity.z);
-
-			newX = entityPosition.x * Math.cos(Math.toRadians(angle+20)) + zdistance * Math.sin(Math.toRadians(angle+20));
-			newZ = entityPosition.x * Math.sin(Math.toRadians(angle+20)) + zdistance * Math.cos(Math.toRadians(angle+20));
-			GL11.glVertex3d(.01 + newX + offsetX, .01 + entityPosition.y, .01 + newZ + offsetZ);
-			*/
-				/*
-		// formula
-		RenderSystem.color4f(color[0] / 255f, color[1] / 255f, color[2] / 255f, (float)color[3]/100);
-		if (projectileHit == null) {
-			return;
-		} else {
-		//	double offsetX = 0 * Math.cos(Math.toRadians(angle * -1)) + 1 * Math.sin(Math.toRadians(angle * -1));
-		//	double offsetZ = 0 * Math.sin(Math.toRadians(angle * -1)) + 1 * Math.cos(Math.toRadians(angle * -1));
-			//double angleToHit = Math.atan2(projectileHit.getZ() - (pZ + offsetZ), projectileHit.getX() - (pX + offsetX));
-			//Draw line to location
-			for (int i = 1; i < (lineRes * 25); i++) {
-				xdistance = Double.valueOf(i) / (Double.valueOf(lineRes) / 4.0D);
-
-
-				double straightX = xdistance * Math.cos(Math.toRadians(angle)) + zdistance * Math.sin(Math.toRadians(angle));
-				double straightZ = xdistance * Math.sin(Math.toRadians(angle)) + zdistance * Math.cos(Math.toRadians(angle));
-				double newX = xdistance * Math.cos(angleToHit) + zdistance * Math.sin(angleToHit);
-				double newZ = xdistance * Math.sin(angleToHit) + zdistance * Math.cos(angleToHit);
-
-
-				ydistance = 0 + xdistance * Math.tan(Math.toRadians(pitch * -1)) - (Math.pow((gravity * xdistance), 2)) / (2 * Math.pow(velocity * Math.cos(Math.toRadians(pitch * -1)), 2));
-
-				GL11.glVertex3d(.01 + prevX + offsetX, .01 + prevY, .01 + prevZ + offsetZ);
-				GL11.glVertex3d(.01 + newX + offsetX, .01 + ydistance, .01 + newZ + offsetZ);
-
-				prevX = newX;
-				prevY = ydistance;
-				prevZ = newZ;
-			}
-		}
-
-		*/
-
-///Hit detection
-//tempEntity.tick();
-
-//if (i % 100 == 0) {
-//	tempEntity.remove();
-//}
-
-//HitResult hitResult = ProjectileUtil.getCollision(tempEntity, (ThrownItemEntity) -> ThrownItemEntity instanceof EnderPearlEntity, RayTraceContext.ShapeType.OUTLINE);
-//if (hitResult.getType() != HitResult.Type.MISS) {
-//renderBox(hitResult.getPos().x - 0.5 - d0, hitResult.getPos().y - 0.5 - d1, hitResult.getPos().z - 0.5 - d2, hitResult.getPos().x + 0.5 - d0, hitResult.getPos().y + 0.5 - d1, hitResult.getPos().z + 0.5 - d2);
-//angleToHit = Math.acos((1 / hitResult.getPos().distanceTo(player.getPos())));
-//tempEntity.remove();
-//break;
-//}
-
-//Render and position update
-//GL11.glVertex3d(prevX + offsetX + (accurateX-d0), entityPosition.y - accurateY + (accurateY - d1), prevZ + offsetZ + (accurateZ - d2));
-
-//entityPosition = entityPosition.add(entityVelocity);
-//entityVelocity = entityVelocity.multiply(drag);
-//entityVelocity = new Vec3d(entityVelocity.x, entityVelocity.y - ngravity, entityVelocity.z);
-//double newX = entityPosition.x * Math.cos(angleToHit-1.5708) - entityPosition.z * Math.sin(angleToHit-1.5708); // Rotation to point trajectory curve towards hit mark.
-//double newZ = entityPosition.x * Math.sin(angleToHit-1.5708) + entityPosition.z * Math.cos(angleToHit-1.5708); //
-//GL11.glVertex3d((prevX - accurateX) + offsetX + (accurateX-d0), (prevY - accurateY) + (accurateY - d1), (prevZ - accurateZ) + offsetZ + (accurateZ - d2));
-//double newX = tempEntity.getX() * Math.cos(angleToHit-1.5708) - tempEntity.getZ() * Math.sin(angleToHit-1.5708); // Rotation to point trajectory curve towards hit mark.
-//double newZ = tempEntity.getX()  * Math.sin(angleToHit-1.5708) + tempEntity.getZ() * Math.cos(angleToHit-1.5708); //
-//GL11.glVertex3d(newX + offsetX + (accurateX-d0), entityPosition.y - accurateY + (accurateY - d1), newZ + offsetZ + (accurateZ - d2));
-//GL11.glVertex3d((newX - accurateX) + offsetX + (accurateX-d0), (tempEntity.getY() - accurateY) + (accurateY - d1), (newZ - accurateZ) + offsetZ + (accurateZ - d2));
-
-//prevX = newX;
-//prevY = tempEntity.getY();
-//prevZ = newZ;
-//EnderPearlEntity tempEntity = new EnderPearlEntity(world, player);
-//tempEntity.setPos(accurateX + entityPosition.x, accurateY + entityPosition.y, accurateZ + entityPosition.z);
-//tempEntity.setPos(accurateX, accurateY + 1.5, accurateZ);
-//tempEntity.setProperties(player, player.pitch, player.yaw, 0.0f, 1.5f, 0);
-//tempEntity.setInvisible(true);
-//tempEntity.setInvulnerable(true);
-
-//Box boundingBox = new Box(0, 0, 0, 0, 0, 0);
-//tempEntity.setBoundingBox(boundingBox);
-//tempEntity.setVelocity(entityVelocity);
-// Find enderpearl hit location
-		/*
-		for (int i = 1; i < (100); i++) {
-			xdistance = i;
-
-			double straightX = xdistance * Math.cos(Math.toRadians(angle)) + zdistance * Math.sin(Math.toRadians(angle));
-			double straightZ = xdistance * Math.sin(Math.toRadians(angle)) + zdistance * Math.cos(Math.toRadians(angle));
-			ydistance = 0 + xdistance * Math.tan(Math.toRadians(pitch * -1)) - (Math.pow((gravity * xdistance), 2)) / (2 * Math.pow(velocity * Math.cos(Math.toRadians(pitch * -1)), 2));
-
-			BlockPos futureBlock = new BlockPos(.01 + straightX + pX, .01 + ydistance + pY + 1, .01 + straightZ + pZ);
-			BlockState futureBlockState = world.getBlockState(futureBlock);
-
-			if (futureBlockState.isFullCube(world, futureBlock) & trigger == false) {
-				GL11.glVertex3d(futureBlock.getX() - d0, futureBlock.getY() + 1.1 - d1, futureBlock.getZ() + 1 - d2);
-				GL11.glVertex3d(futureBlock.getX() + 1 - d0, futureBlock.getY() + 1.1 - d1, futureBlock.getZ() - d2);
-				GL11.glVertex3d(futureBlock.getX() + 1 - d0, futureBlock.getY() + 1.1 - d1, futureBlock.getZ() + 1 - d2);
-				GL11.glVertex3d(futureBlock.getX() - d0, futureBlock.getY() + 1.1 - d1, futureBlock.getZ() - d2);
-				projectileHit = futureBlock;
-				break;
-			}
-		}
-		*/
-//double angle = yaw+90;
-//double gravity = 0.180;
-//double velocity = 1.5;
-//double xdistance = 0;
-//double ydistance = 1; // + xdistance * Math.tan(Math.toRadians(pitch*-1)) - Math.pow((gravity * xdistance), 2)/2*Math.pow(velocity*Math.cos(Math.toRadians(pitch*-1)), 2);
-//double zdistance = 0;
-//double prevY = 0 + xdistance * Math.tan(Math.toRadians(pitch*-1)) - (Math.pow((gravity * xdistance), 2))/(2*Math.pow(velocity*Math.cos(Math.toRadians(pitch*-1)), 2));
-
-///boolean trigger = false;
-//int extrasteps = 0;
-//BlockPos projectileHit = null;

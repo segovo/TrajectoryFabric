@@ -10,7 +10,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.MessageType;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import java.awt.*;
 import java.io.File;
 
@@ -41,6 +41,22 @@ public class TrajectoryCommands implements ClientCommandPlugin {
                                                         })
 
                                                 )))))
+                .then(literal("arrowTrajectory")
+                        .then(literal("true").executes(context -> {
+                            config.set("arrowTrajectory", true);
+                            config.save();
+                            TrajectoryFabric.remoteLoadConfig();
+                            sendPrivateMessage(new TranslatableText("arrowTrajectory.true"));
+                            return 1;
+                        }))
+                        .then(literal("false").executes(context -> {
+                            config.set("arrowTrajectory", false);
+                            config.save();
+                            TrajectoryFabric.remoteLoadConfig();
+                            sendPrivateMessage(new TranslatableText("arrowTrajectory.false"));
+                            return 1;
+                        }))
+                )
         );
     }
 
