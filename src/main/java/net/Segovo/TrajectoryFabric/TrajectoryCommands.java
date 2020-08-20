@@ -57,6 +57,56 @@ public class TrajectoryCommands implements ClientCommandPlugin {
                             return 1;
                         }))
                 )
+                .then(literal("componentVisibility")
+                        .then(literal("line")
+                                .then(literal("true").executes(context -> {
+                                    config.set("lineVisibility", true);
+                                    config.save();
+                                    TrajectoryFabric.remoteLoadConfig();
+                                    sendPrivateMessage(new TranslatableText("lineVisibility.true"));
+                                    return 1;
+                                }))
+                                .then(literal("false").executes(context -> {
+                                    config.set("lineVisibility", false);
+                                    config.save();
+                                    TrajectoryFabric.remoteLoadConfig();
+                                    sendPrivateMessage(new TranslatableText("lineVisibility.false"));
+                                    return 1;
+                                }))
+                        )
+                        .then(literal("box")
+                                .then(literal("true").executes(context -> {
+                                    config.set("boxVisibility", true);
+                                    config.save();
+                                    TrajectoryFabric.remoteLoadConfig();
+                                    sendPrivateMessage(new TranslatableText("boxVisibility.true"));
+                                    return 1;
+                                }))
+                                .then(literal("false").executes(context -> {
+                                    config.set("boxVisibility", false);
+                                    config.save();
+                                    TrajectoryFabric.remoteLoadConfig();
+                                    sendPrivateMessage(new TranslatableText("boxVisibility.false"));
+                                    return 1;
+                                }))
+                        )
+                        .then(literal("approxBox")
+                                .then(literal("true").executes(context -> {
+                                    config.set("approxBoxVisibility", true);
+                                    config.save();
+                                    TrajectoryFabric.remoteLoadConfig();
+                                    sendPrivateMessage(new TranslatableText("approxBoxVisibility.true"));
+                                    return 1;
+                                }))
+                                .then(literal("false").executes(context -> {
+                                    config.set("approxBoxVisibility", false);
+                                    config.save();
+                                    TrajectoryFabric.remoteLoadConfig();
+                                    sendPrivateMessage(new TranslatableText("approxBoxVisibility.false"));
+                                    return 1;
+                                }))
+                        )
+                )
         );
     }
 

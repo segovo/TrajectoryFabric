@@ -46,21 +46,33 @@ public class TrajectoryFabric implements ClientModInitializer {
 	public boolean checkConfig() {
 		config.load();
 
+		//1.0.10
+		Optional<Integer> nineOneCommands = config.getOptional("lineVisibility");
+		if(!nineOneCommands.isPresent()) {
+			System.out.println("Visibility commands are missing from config!");
+			config.set("lineVisibility", true);
+			config.set("boxVisibility", true);
+			config.set("approxBoxVisibility", true);
+			config.set("version", "1.0.10");
+			config.save();
+			config.load();
+		}
+
 		//Bow update
 		Optional<Integer> trajectory = config.getOptional("arrowTrajectory");
 		if(!trajectory.isPresent()) {
 			System.out.println("arrowTrajectory missing from Config!");
 			config.set("arrowTrajectory", true);
+			config.set("version", "1.0.9");
 			config.save();
 			config.load();
-		} else {
-
 		}
 
+		//Base
 		Optional<Integer> version = config.getOptional("version");
 		if(!version.isPresent()) {
 			System.out.println("No Config!");
-			config.set("version", 1);
+			config.set("version", "1.0.0");
 			config.set("lineColorR", 255);
 			config.set("lineColorG", 255);
 			config.set("lineColorB", 255);
@@ -70,7 +82,7 @@ public class TrajectoryFabric implements ClientModInitializer {
 			config.load();
 			return false;
 		} else {
-			System.out.println("Config Found!");
+			System.out.println("Complete config found!");
 			return true;
 		}
 
@@ -78,12 +90,12 @@ public class TrajectoryFabric implements ClientModInitializer {
 
 	}
 
-	public static void setVelocity() {
-
-	}
-
 	public int[] getConfigColor() {
 		return new int[] {config.get("lineColorR"), config.get("lineColorG"), config.get("lineColorB"), config.get("lineColorA")};
+	}
+
+	public boolean[] getConfigBooleans() {
+		return new boolean[] {config.get("lineVisibility"), config.get("boxVisibility"), config.get("approxBoxVisibility")};
 	}
 
 	public static void renderBox(double x1, double y1, double z1, double x2, double y2, double z2) {
@@ -125,13 +137,10 @@ public class TrajectoryFabric implements ClientModInitializer {
 
 	}
 
-	public static void renderCurve(Camera camera, World world, BlockPos pos, float pitch, float yaw, double eye, PlayerEntity player, int[] color, float speed, float gravity) {
+	public static void renderCurve(Camera camera, World world, BlockPos pos, float pitch, float yaw, double eye, PlayerEntity player, int[] color, float speed, float gravity, boolean[] booleans) {
 		double d0 = camera.getPos().x;
 		double d1 = camera.getPos().y - .005D;
 		double d2 = camera.getPos().z;
-		int pX = pos.getX();
-		int pY = pos.getY();
-		int pZ = pos.getZ();
 		double accurateX = player.getX();
 		double accurateY = player.getY();
 		double accurateZ = player.getZ();
@@ -164,14 +173,19 @@ public class TrajectoryFabric implements ClientModInitializer {
 				double hitDistance = hitResult.getPos().distanceTo(player.getPos());
 				double boxSize = hitDistance > 30 ? hitDistance/70 : 0.5;
 				double defaultBoxSize = 0.5; // 0.5 = full block
-				renderBox(hitResult.getPos().x - defaultBoxSize - d0, hitResult.getPos().y - defaultBoxSize - d1, hitResult.getPos().z - defaultBoxSize - d2, hitResult.getPos().x + defaultBoxSize - d0, hitResult.getPos().y + defaultBoxSize - d1, hitResult.getPos().z + defaultBoxSize - d2);
-				renderBox(hitResult.getPos().x - boxSize - d0, hitResult.getPos().y - boxSize - d1, hitResult.getPos().z - boxSize - d2, hitResult.getPos().x + boxSize - d0, hitResult.getPos().y + boxSize - d1, hitResult.getPos().z + boxSize - d2);
+				if (booleans[1]) { //Box visibility
+					renderBox(hitResult.getPos().x - defaultBoxSize - d0, hitResult.getPos().y - defaultBoxSize - d1, hitResult.getPos().z - defaultBoxSize - d2, hitResult.getPos().x + defaultBoxSize - d0, hitResult.getPos().y + defaultBoxSize - d1, hitResult.getPos().z + defaultBoxSize - d2);
+				}
+				if (booleans[2]) { //ApproxBox visibility
+					renderBox(hitResult.getPos().x - boxSize - d0, hitResult.getPos().y - boxSize - d1, hitResult.getPos().z - boxSize - d2, hitResult.getPos().x + boxSize - d0, hitResult.getPos().y + boxSize - d1, hitResult.getPos().z + boxSize - d2);
+				}
 				angleToHit = Math.acos(1 / hitDistance);
 				break;
 			}
 
-
-			GL11.glVertex3d(prevX + offsetX + (accurateX-d0), entityPosition.y + (accurateY - d1), prevZ + offsetZ + (accurateZ - d2));
+			if (booleans[0]) { //Line visibility
+				GL11.glVertex3d(prevX + offsetX + (accurateX - d0), entityPosition.y + (accurateY - d1), prevZ + offsetZ + (accurateZ - d2));
+			}
 
 			entityPosition = entityPosition.add(entityVelocity);
 			entityVelocity = entityVelocity.multiply(drag);
@@ -179,7 +193,9 @@ public class TrajectoryFabric implements ClientModInitializer {
 			double newX = entityPosition.x * Math.cos(angleToHit-1.5708) - entityPosition.z * Math.sin(angleToHit-1.5708); // Rotation to point trajectory curve towards hit mark.
 			double newZ = entityPosition.x * Math.sin(angleToHit-1.5708) + entityPosition.z * Math.cos(angleToHit-1.5708); //
 
-			GL11.glVertex3d(newX + offsetX + (accurateX-d0), entityPosition.y + (accurateY - d1), newZ + offsetZ + (accurateZ - d2));
+			if (booleans[0]) { //Line visibility
+				GL11.glVertex3d(newX + offsetX + (accurateX-d0), entityPosition.y + (accurateY - d1), newZ + offsetZ + (accurateZ - d2));
+			}
 			prevX = newX;
 			prevZ = newZ;
 		}
@@ -195,13 +211,13 @@ public class TrajectoryFabric implements ClientModInitializer {
 		config.load();
 
 		// Rendering
-		Set<Item> itemsSimple = new HashSet<Item>();
+		Set<Item> itemsSimple = new HashSet<>();
 		itemsSimple.add(Items.ENDER_PEARL.asItem());
 		itemsSimple.add(Items.SNOWBALL.asItem());
 		//items.add(Items.SPLASH_POTION.asItem());
 		itemsSimple.add(Items.EGG.asItem());
 
-		Set<Item> itemsComplex = new HashSet<Item>();
+		Set<Item> itemsComplex = new HashSet<>();
 		itemsComplex.add(Items.BOW.asItem());
 
 		MinecraftClient client = MinecraftClient.getInstance();
@@ -226,7 +242,8 @@ public class TrajectoryFabric implements ClientModInitializer {
 			if (itemsSimple.contains(itemStack.getItem())) {
 				float speed = 1.5f;
 				int[] color = getConfigColor();
-				TrajectoryFabric.renderCurve(camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.03f);
+				boolean[] booleans = getConfigBooleans();
+				TrajectoryFabric.renderCurve(camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.03f, booleans);
 			} else if (itemsComplex.contains(itemStack.getItem()) && (boolean)config.get("arrowTrajectory")) {
 				float bowMultiplier = (72000.0f - playerEntity.getItemUseTimeLeft()) / 20.0f;
 				bowMultiplier = (bowMultiplier * bowMultiplier + bowMultiplier * 2.0f) / 3.0f;
@@ -236,7 +253,8 @@ public class TrajectoryFabric implements ClientModInitializer {
 
 				float speed = bowMultiplier * 3.0f;
 				int[] color = getConfigColor();
-				TrajectoryFabric.renderCurve(camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.05f);
+				boolean[] booleans = getConfigBooleans();
+				TrajectoryFabric.renderCurve(camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.05f, booleans);
 			}
 
 
