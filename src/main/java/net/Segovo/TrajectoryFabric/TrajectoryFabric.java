@@ -1,5 +1,6 @@
 package net.Segovo.TrajectoryFabric;
 
+import com.electronwill.nightconfig.core.ConfigSpec;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -28,6 +29,11 @@ import java.util.Optional;
 import java.util.Set;
 
 //Code snippets from https://github.com/shedaniel/LightOverlay/blob/1.16/src/main/java/me/shedaniel/lightoverlay/fabric/LightOverlay.java
+
+//###########
+//The main functionality of the mod, including rendering/simulating the line and checking/repairing the config.
+//###########
+
 public class TrajectoryFabric implements ClientModInitializer {
 
 	final boolean smoothLines = true;
@@ -43,59 +49,16 @@ public class TrajectoryFabric implements ClientModInitializer {
 		config.load();
 	}
 
-	public boolean checkConfig() {
-		config.load();
-
-		//1.0.10
-		Optional<Integer> nineOneCommands = config.getOptional("lineVisibility");
-		if(!nineOneCommands.isPresent()) {
-			System.out.println("Visibility commands are missing from config!");
-			config.set("lineVisibility", true);
-			config.set("boxVisibility", true);
-			config.set("approxBoxVisibility", true);
-			config.set("version", "1.0.10");
-			config.save();
-			config.load();
-		}
-
-		//Bow update
-		Optional<Integer> trajectory = config.getOptional("arrowTrajectory");
-		if(!trajectory.isPresent()) {
-			System.out.println("arrowTrajectory missing from Config!");
-			config.set("arrowTrajectory", true);
-			config.set("version", "1.0.9");
-			config.save();
-			config.load();
-		}
-
-		//Base
-		Optional<Integer> version = config.getOptional("version");
-		if(!version.isPresent()) {
-			System.out.println("No Config!");
-			config.set("version", "1.0.0");
-			config.set("lineColorR", 255);
-			config.set("lineColorG", 255);
-			config.set("lineColorB", 255);
-			config.set("lineColorA", 100);
-			config.set("arrowTrajectory", true);
-			config.save();
-			config.load();
-			return false;
-		} else {
-			System.out.println("Complete config found!");
-			return true;
-		}
-
-
-
-	}
-
 	public int[] getConfigColor() {
 		return new int[] {config.get("lineColorR"), config.get("lineColorG"), config.get("lineColorB"), config.get("lineColorA")};
 	}
 
 	public boolean[] getConfigBooleans() {
 		return new boolean[] {config.get("lineVisibility"), config.get("boxVisibility"), config.get("approxBoxVisibility")};
+	}
+
+	public int[] getConfigIntegers() {
+		return new int[] {config.get("lineOrigin")};
 	}
 
 	public static void renderBox(double x1, double y1, double z1, double x2, double y2, double z2) {
@@ -137,7 +100,7 @@ public class TrajectoryFabric implements ClientModInitializer {
 
 	}
 
-	public static void renderCurve(Camera camera, World world, BlockPos pos, float pitch, float yaw, double eye, PlayerEntity player, int[] color, float speed, float gravity, boolean[] booleans) {
+	public static void renderCurve(Camera camera, World world, BlockPos pos, float pitch, float yaw, double eye, PlayerEntity player, int[] color, float speed, float gravity, boolean[] booleans, int[] integers, boolean mainHand) {
 		double d0 = camera.getPos().x;
 		double d1 = camera.getPos().y - .005D;
 		double d2 = camera.getPos().z;
@@ -160,8 +123,16 @@ public class TrajectoryFabric implements ClientModInitializer {
 		Vec3d entityVelocity = new Vec3d(vec3d.x, vec3d.y, vec3d.z);
 		Vec3d entityPosition = new Vec3d(0, 0 + 1.5, 0);
 
-		double offsetX = 0 * Math.cos(Math.toRadians((yaw+90)*-1)) + 1 * Math.sin(Math.toRadians((yaw+90)*-1));
-		double offsetZ = 0 * Math.sin(Math.toRadians((yaw+90)*-1)) + 1 * Math.cos(Math.toRadians((yaw+90)*-1));
+		int playerside = 1;
+		if (integers[0] != 2) {
+			playerside = (integers[0] == 3 ? 1 : -1);
+		} else {
+			playerside = (mainHand ? 1 : -1);
+		}
+
+		double offsetX = 0 * Math.cos(Math.toRadians((yaw + 90) * -1)) + playerside * Math.sin(Math.toRadians((yaw + 90) * -1));
+		double offsetZ = 0 * Math.sin(Math.toRadians((yaw + 90) * -1)) + playerside * Math.cos(Math.toRadians((yaw + 90) * -1));
+
 		double prevX = 0;
 		double prevZ = 0;
 
@@ -179,7 +150,10 @@ public class TrajectoryFabric implements ClientModInitializer {
 				if (booleans[2]) { //ApproxBox visibility
 					renderBox(hitResult.getPos().x - boxSize - d0, hitResult.getPos().y - boxSize - d1, hitResult.getPos().z - boxSize - d2, hitResult.getPos().x + boxSize - d0, hitResult.getPos().y + boxSize - d1, hitResult.getPos().z + boxSize - d2);
 				}
-				angleToHit = Math.acos(1 / hitDistance);
+				angleToHit = Math.acos(playerside / hitDistance); //finds the angle the line needs to point at to hit the target (since it's coming from the side, and changes depending on distance),
+														// the "1" represents the opposite side, which we know. (opposite/adjacent).
+														//
+														// Good reference: https://www.khanacademy.org/math/geometry/hs-geo-trig/hs-geo-solve-for-an-angle/a/inverse-trig-functions-intro
 				break;
 			}
 
@@ -206,8 +180,25 @@ public class TrajectoryFabric implements ClientModInitializer {
 	public void onInitializeClient() {
 
 		//Night Config
+		ConfigSpec spec = new ConfigSpec();
+		spec.defineInRange("lineOrigin", 3, 1, 3);
+		spec.define("lineVisibility", true);
+		spec.define("boxVisibility", true);
+		spec.define("approxBoxVisibility", true);
+		spec.define("arrowTrajectory", true);
+		spec.defineInRange("lineColorR", 255, 0, 255);
+		spec.defineInRange("lineColorG", 255, 0, 255);
+		spec.defineInRange("lineColorB", 255, 0, 255);
+		spec.defineInRange("lineColorA", 100, 0, 100);
+
 		System.out.println(FabricLoader.getInstance().getConfigDirectory());
-		checkConfig();
+
+		if (!spec.isCorrect(config)) {
+			System.out.println("Config incorrect! resetting...");
+			spec.correct(config);
+			config.save();
+		}
+
 		config.load();
 
 		// Rendering
@@ -238,13 +229,20 @@ public class TrajectoryFabric implements ClientModInitializer {
 			float yaw = playerEntity.yaw;
 			double eye = playerEntity.getEyeY();
 			ItemStack itemStack = playerEntity.getMainHandStack();
+			ItemStack itemStackAlt = playerEntity.getOffHandStack();
 
-			if (itemsSimple.contains(itemStack.getItem())) {
+			// Set mainHand to true/false based on which hand is holding a item which is a projectile.
+			boolean mainHand = true;
+			if (itemsSimple.contains(itemStack.getItem()) || itemsComplex.contains(itemStack.getItem())) { mainHand = true; }
+			else if (itemsSimple.contains(itemStackAlt.getItem()) || itemsComplex.contains(itemStackAlt.getItem())) { mainHand = false; };
+
+			if (itemsSimple.contains(itemStack.getItem()) || itemsSimple.contains(itemStackAlt.getItem())) {
 				float speed = 1.5f;
 				int[] color = getConfigColor();
 				boolean[] booleans = getConfigBooleans();
-				TrajectoryFabric.renderCurve(camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.03f, booleans);
-			} else if (itemsComplex.contains(itemStack.getItem()) && (boolean)config.get("arrowTrajectory")) {
+				int[] integers = getConfigIntegers();
+				TrajectoryFabric.renderCurve(camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.03f, booleans, integers, mainHand);
+			} else if (itemsComplex.contains(itemStack.getItem()) ||  itemsComplex.contains(itemStackAlt.getItem()) && (boolean)config.get("arrowTrajectory")) {
 				float bowMultiplier = (72000.0f - playerEntity.getItemUseTimeLeft()) / 20.0f;
 				bowMultiplier = (bowMultiplier * bowMultiplier + bowMultiplier * 2.0f) / 3.0f;
 				if (bowMultiplier > 1.0f) {
@@ -254,7 +252,8 @@ public class TrajectoryFabric implements ClientModInitializer {
 				float speed = bowMultiplier * 3.0f;
 				int[] color = getConfigColor();
 				boolean[] booleans = getConfigBooleans();
-				TrajectoryFabric.renderCurve(camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.05f, booleans);
+				int[] integers = getConfigIntegers();
+				TrajectoryFabric.renderCurve(camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.05f, booleans, integers, mainHand);
 			}
 
 
@@ -266,8 +265,6 @@ public class TrajectoryFabric implements ClientModInitializer {
 
 		HudRenderCallback.EVENT.register((matrixStack, tickDelta) -> {
 		});
-
-		System.out.println("Hello from TrajectoryFabric!");
 	}
 
 

@@ -18,6 +18,10 @@ import static com.mojang.brigadier.arguments.IntegerArgumentType.getInteger;
 import static io.github.cottonmc.clientcommands.ArgumentBuilders.argument;
 import static io.github.cottonmc.clientcommands.ArgumentBuilders.literal;
 
+//###########
+//Registers the commands and defines their functionality.
+//###########
+
 public class TrajectoryCommands implements ClientCommandPlugin {
 
     FileConfig config = getConfigReference();
@@ -106,6 +110,29 @@ public class TrajectoryCommands implements ClientCommandPlugin {
                                     return 1;
                                 }))
                         )
+                )
+                .then(literal("lineOrigin")
+                        .then(literal("left").executes(context -> {
+                                config.set("lineOrigin", 1);
+                                config.save();
+                                TrajectoryFabric.remoteLoadConfig();
+                                sendPrivateMessage(new TranslatableText("lineOrigin.left"));
+                                return 1;
+                        }))
+                        .then(literal("auto").executes(context -> {
+                                config.set("lineOrigin", 2);
+                                config.save();
+                                TrajectoryFabric.remoteLoadConfig();
+                                sendPrivateMessage(new TranslatableText("lineOrigin.auto"));
+                                return 1;
+                        }))
+                        .then(literal("right").executes(context -> {
+                            config.set("lineOrigin", 3);
+                            config.save();
+                            TrajectoryFabric.remoteLoadConfig();
+                            sendPrivateMessage(new TranslatableText("lineOrigin.right"));
+                            return 1;
+                        }))
                 )
         );
     }
