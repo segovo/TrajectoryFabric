@@ -19,7 +19,7 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RayTraceContext;
+import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
 
@@ -139,7 +139,7 @@ public class TrajectoryFabric implements ClientModInitializer {
 		SnowballEntity tempEntity = new SnowballEntity(world, player);
 
 		for (int i=0; i < 100; i++) {
-			HitResult hitResult = world.rayTrace(new RayTraceContext(new Vec3d(accurateX + entityPosition.x, accurateY + entityPosition.y, accurateZ + entityPosition.z), new Vec3d(accurateX + entityPosition.x, accurateY + entityPosition.y, accurateZ + entityPosition.z).add(entityVelocity), RayTraceContext.ShapeType.OUTLINE, RayTraceContext.FluidHandling.NONE, tempEntity));
+			HitResult hitResult = world.raycast(new RaycastContext(new Vec3d(accurateX + entityPosition.x, accurateY + entityPosition.y, accurateZ + entityPosition.z), new Vec3d(accurateX + entityPosition.x, accurateY + entityPosition.y, accurateZ + entityPosition.z).add(entityVelocity), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, tempEntity));
 			if (hitResult.getType() != HitResult.Type.MISS) {
 				double hitDistance = hitResult.getPos().distanceTo(player.getPos());
 				double boxSize = hitDistance > 30 ? hitDistance/70 : 0.5;
