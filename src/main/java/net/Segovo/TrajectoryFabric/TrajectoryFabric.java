@@ -4,12 +4,12 @@ import com.electronwill.nightconfig.core.ConfigSpec;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.shedaniel.cloth.api.client.events.v0.ClothClientHooks;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.thrown.SnowballEntity;
 import net.minecraft.item.Item;
@@ -22,11 +22,14 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
-
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.util.math.Box;
 
 //Code snippets from https://github.com/shedaniel/LightOverlay/blob/1.16/src/main/java/me/shedaniel/lightoverlay/fabric/LightOverlay.java
 
@@ -61,46 +64,14 @@ public class TrajectoryFabric implements ClientModInitializer {
 		return new int[] {config.get("lineOrigin")};
 	}
 
-	public static void renderBox(double x1, double y1, double z1, double x2, double y2, double z2) {
-		GL11.glVertex3d(x1, y1, z1);
-		GL11.glVertex3d(x1, y2, z1);
+	public static void renderBox(MatrixStack stack, VertexConsumer buffer, double x1, double y1, double z1, double x2, double y2, double z2, int[] color) {
+		Box aabb = new Box(x1, y1, z1, x2, y2, z2);
+		WorldRenderer.drawBox(stack, buffer, aabb, color[0], color[1], color[2], 1);
 
-		GL11.glVertex3d(x2, y1, z1);
-		GL11.glVertex3d(x2, y2, z1);
-
-		GL11.glVertex3d(x1, y1, z2);
-		GL11.glVertex3d(x1, y2, z2);
-
-		GL11.glVertex3d(x2, y1, z2);
-		GL11.glVertex3d(x2, y2, z2);
-		//
-		GL11.glVertex3d(x1, y1, z1);
-		GL11.glVertex3d(x2, y1, z1);
-
-		GL11.glVertex3d(x1, y2, z1);
-		GL11.glVertex3d(x2, y2, z1);
-
-		GL11.glVertex3d(x1, y1, z2);
-		GL11.glVertex3d(x2, y1, z2);
-
-		GL11.glVertex3d(x1, y2, z2);
-		GL11.glVertex3d(x2, y2, z2);
-		//
-		GL11.glVertex3d(x1, y1, z1);
-		GL11.glVertex3d(x1, y1, z2);
-
-		GL11.glVertex3d(x2, y1, z1);
-		GL11.glVertex3d(x2, y1, z2);
-
-		GL11.glVertex3d(x1, y2, z1);
-		GL11.glVertex3d(x1, y2, z2);
-
-		GL11.glVertex3d(x2, y2, z1);
-		GL11.glVertex3d(x2, y2, z2);;
 
 	}
 
-	public static void renderCurve(Camera camera, World world, BlockPos pos, float pitch, float yaw, double eye, PlayerEntity player, int[] color, float speed, float gravity, boolean[] booleans, int[] integers, boolean mainHand) {
+	public static void renderCurve(MatrixStack stack, VertexConsumer buffer, Camera camera, World world, BlockPos pos, float pitch, float yaw, double eye, PlayerEntity player, int[] color, float speed, float gravity, boolean[] booleans, int[] integers, boolean mainHand) {
 		double d0 = camera.getPos().x;
 		double d1 = camera.getPos().y - .005D;
 		double d2 = camera.getPos().z;
@@ -109,7 +80,7 @@ public class TrajectoryFabric implements ClientModInitializer {
 		double accurateZ = player.getZ();
 
 		// Simulation
-		RenderSystem.color4f(color[0] / 255f, color[1] / 255f, color[2] / 255f, (float)color[3]/100);
+
 
 		//float ngravity = 0.03f;
 		float drag = 0.99f;
@@ -145,10 +116,10 @@ public class TrajectoryFabric implements ClientModInitializer {
 				double boxSize = hitDistance > 30 ? hitDistance/70 : 0.5;
 				double defaultBoxSize = 0.5; // 0.5 = full block
 				if (booleans[1]) { //Box visibility
-					renderBox(hitResult.getPos().x - defaultBoxSize - d0, hitResult.getPos().y - defaultBoxSize - d1, hitResult.getPos().z - defaultBoxSize - d2, hitResult.getPos().x + defaultBoxSize - d0, hitResult.getPos().y + defaultBoxSize - d1, hitResult.getPos().z + defaultBoxSize - d2);
+					renderBox(stack, buffer, hitResult.getPos().x - defaultBoxSize - d0, hitResult.getPos().y - defaultBoxSize - d1, hitResult.getPos().z - defaultBoxSize - d2, hitResult.getPos().x + defaultBoxSize - d0, hitResult.getPos().y + defaultBoxSize - d1, hitResult.getPos().z + defaultBoxSize - d2, color);
 				}
 				if (booleans[2]) { //ApproxBox visibility
-					renderBox(hitResult.getPos().x - boxSize - d0, hitResult.getPos().y - boxSize - d1, hitResult.getPos().z - boxSize - d2, hitResult.getPos().x + boxSize - d0, hitResult.getPos().y + boxSize - d1, hitResult.getPos().z + boxSize - d2);
+					renderBox(stack, buffer, hitResult.getPos().x - boxSize - d0, hitResult.getPos().y - boxSize - d1, hitResult.getPos().z - boxSize - d2, hitResult.getPos().x + boxSize - d0, hitResult.getPos().y + boxSize - d1, hitResult.getPos().z + boxSize - d2, color);
 				}
 				angleToHit = Math.acos(playerside / hitDistance); //finds the angle the line needs to point at to hit the target (since it's coming from the side, and changes depending on distance),
 														// the "1" represents the opposite side, which we know. (opposite/adjacent).
@@ -157,9 +128,10 @@ public class TrajectoryFabric implements ClientModInitializer {
 				break;
 			}
 
-			if (booleans[0]) { //Line visibility
-				GL11.glVertex3d(prevX + offsetX + (accurateX - d0), entityPosition.y + (accurateY - d1), prevZ + offsetZ + (accurateZ - d2));
-			}
+
+			double startx = prevX + offsetX + (accurateX - d0);
+			double starty = entityPosition.y + (accurateY - d1);
+			double startz = prevZ + offsetZ + (accurateZ - d2);
 
 			entityPosition = entityPosition.add(entityVelocity);
 			entityVelocity = entityVelocity.multiply(drag);
@@ -168,8 +140,13 @@ public class TrajectoryFabric implements ClientModInitializer {
 			double newZ = entityPosition.x * Math.sin(angleToHit-1.5708) + entityPosition.z * Math.cos(angleToHit-1.5708); //
 
 			if (booleans[0]) { //Line visibility
-				GL11.glVertex3d(newX + offsetX + (accurateX-d0), entityPosition.y + (accurateY - d1), newZ + offsetZ + (accurateZ - d2));
+				double endx = newX + offsetX + (accurateX-d0);
+				double endy = entityPosition.y + (accurateY - d1);
+				double endz = newZ + offsetZ + (accurateZ - d2);
+				RenderUtils.renderSingleLine(stack, buffer, (float) startx, (float) starty, (float) startz, (float) endx, (float) endy, (float) endz, color[0] / 255f, color[1] / 255f, color[2] / 255f, (float)color[3]/100);
+
 			}
+
 			prevX = newX;
 			prevZ = newZ;
 		}
@@ -212,21 +189,36 @@ public class TrajectoryFabric implements ClientModInitializer {
 		itemsComplex.add(Items.BOW.asItem());
 
 		MinecraftClient client = MinecraftClient.getInstance();
-		ClothClientHooks.DEBUG_RENDER_PRE.register(() -> {
-			RenderSystem.enableDepthTest();
-			RenderSystem.disableTexture();
+
+		WorldRenderEvents.AFTER_ENTITIES.register((WorldRenderContext context) -> {
+			MatrixStack stack = context.matrixStack();
+
+			RenderSystem.setShader(GameRenderer::getPositionColorShader);
+			RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+			RenderSystem.depthMask(false);
 			RenderSystem.enableBlend();
-			RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
+			RenderSystem.defaultBlendFunc();
+			RenderSystem.disableTexture();
 			if (smoothLines) GL11.glEnable(GL11.GL_LINE_SMOOTH);
-			GL11.glLineWidth(2.0f);
-			GL11.glBegin(GL11.GL_LINES);
+
+			stack.push();
+			Tessellator tessellator = Tessellator.getInstance();
+			BufferBuilder buffer = tessellator.getBuffer();
+			buffer.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+
+			RenderSystem.applyModelViewMatrix();
+			Camera camera = client.gameRenderer.getCamera();
+			Vec3d cameraPos = camera.getPos();
+
+
+			//GL11.glLineWidth(2.0f);
+			//GL11.glBegin(GL11.GL_LINES);
 
 			PlayerEntity playerEntity = client.player;
 			World world = client.world;
 			BlockPos blockPos = new BlockPos(playerEntity.getX(), playerEntity.getY(), playerEntity.getZ());
-			Camera camera = client.gameRenderer.getCamera();
-			float pitch = playerEntity.pitch;
-			float yaw = playerEntity.yaw;
+			float pitch = playerEntity.getPitch();
+			float yaw = playerEntity.getYaw();
 			double eye = playerEntity.getEyeY();
 			ItemStack itemStack = playerEntity.getMainHandStack();
 			ItemStack itemStackAlt = playerEntity.getOffHandStack();
@@ -237,12 +229,14 @@ public class TrajectoryFabric implements ClientModInitializer {
 			else if (itemsSimple.contains(itemStackAlt.getItem()) || itemsComplex.contains(itemStackAlt.getItem())) { mainHand = false; };
 
 			if (itemsSimple.contains(itemStack.getItem()) || itemsSimple.contains(itemStackAlt.getItem())) {
+				System.out.println("A");
 				float speed = 1.5f;
 				int[] color = getConfigColor();
 				boolean[] booleans = getConfigBooleans();
 				int[] integers = getConfigIntegers();
-				TrajectoryFabric.renderCurve(camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.03f, booleans, integers, mainHand);
-			} else if (itemsComplex.contains(itemStack.getItem()) ||  itemsComplex.contains(itemStackAlt.getItem()) && (boolean)config.get("arrowTrajectory")) {
+				TrajectoryFabric.renderCurve(stack, buffer, camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.03f, booleans, integers, mainHand);
+			} else if (itemsComplex.contains(itemStack.getItem()) ||  itemsComplex.contains(itemStackAlt.getItem()) && ((boolean)config.get("arrowTrajectory"))) {
+				System.out.println("B");
 				float bowMultiplier = (72000.0f - playerEntity.getItemUseTimeLeft()) / 20.0f;
 				bowMultiplier = (bowMultiplier * bowMultiplier + bowMultiplier * 2.0f) / 3.0f;
 				if (bowMultiplier > 1.0f) {
@@ -253,18 +247,22 @@ public class TrajectoryFabric implements ClientModInitializer {
 				int[] color = getConfigColor();
 				boolean[] booleans = getConfigBooleans();
 				int[] integers = getConfigIntegers();
-				TrajectoryFabric.renderCurve(camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.05f, booleans, integers, mainHand);
+				TrajectoryFabric.renderCurve(stack, buffer, camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.05f, booleans, integers, mainHand);
 			}
 
 
-			GL11.glEnd();
+			//GL11.glEnd();
+			tessellator.draw();
+			stack.pop();
+			RenderSystem.applyModelViewMatrix();
+			RenderSystem.setShaderColor(1, 1, 1, 1);
+
 			RenderSystem.disableBlend();
 			RenderSystem.enableTexture();
 			if (smoothLines) GL11.glDisable(GL11.GL_LINE_SMOOTH);
 		});
+		TrajectoryCommands.registerCommands();
 
-		HudRenderCallback.EVENT.register((matrixStack, tickDelta) -> {
-		});
 	}
 
 

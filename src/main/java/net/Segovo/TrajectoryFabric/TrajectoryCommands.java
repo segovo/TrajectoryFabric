@@ -3,151 +3,152 @@ package net.Segovo.TrajectoryFabric;
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import io.github.cottonmc.clientcommands.ClientCommandPlugin;
-import io.github.cottonmc.clientcommands.CottonClientCommandSource;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.network.MessageType;
+import net.minecraft.network.message.MessageType;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import java.awt.*;
 import java.io.File;
 
 import static com.mojang.brigadier.arguments.IntegerArgumentType.getInteger;
-import static io.github.cottonmc.clientcommands.ArgumentBuilders.argument;
-import static io.github.cottonmc.clientcommands.ArgumentBuilders.literal;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 
 //###########
 //Registers the commands and defines their functionality.
 //###########
 
-public class TrajectoryCommands implements ClientCommandPlugin {
+public class TrajectoryCommands  {
 
-    FileConfig config = getConfigReference();
+    static FileConfig config = getConfigReference();
 
-    @Override
-    public void registerCommands(CommandDispatcher<CottonClientCommandSource> dispatcher) {
-        dispatcher.register(literal("trajectory")
-                .then(literal("lineColor")
-                        .then(argument("red", IntegerArgumentType.integer(0, 255))
-                                .then(argument("green", IntegerArgumentType.integer(0, 255))
-                                        .then(argument("blue", IntegerArgumentType.integer(0, 255))
-                                                .then(argument("alpha", IntegerArgumentType.integer(0, 100)).executes(context -> {
-                                                            config.set("lineColorR", getInteger(context, "red"));
-                                                            config.set("lineColorG", getInteger(context, "green"));
-                                                            config.set("lineColorB", getInteger(context, "blue"));
-                                                            config.set("lineColorA", getInteger(context, "alpha"));
-                                                            config.save();
-                                                            TrajectoryFabric.remoteLoadConfig();
-                                                            sendPrivateMessage(new TranslatableText("lineColor.set", describeColor(getInteger(context, "red"), getInteger(context, "green"), getInteger(context, "blue"))));
-                                                            return 1;
-                                                        })
+    public static void registerCommands() {
 
-                                                )))))
-                .then(literal("arrowTrajectory")
-                        .then(literal("true").executes(context -> {
-                            config.set("arrowTrajectory", true);
-                            config.save();
-                            TrajectoryFabric.remoteLoadConfig();
-                            sendPrivateMessage(new TranslatableText("arrowTrajectory.true"));
-                            return 1;
-                        }))
-                        .then(literal("false").executes(context -> {
-                            config.set("arrowTrajectory", false);
-                            config.save();
-                            TrajectoryFabric.remoteLoadConfig();
-                            sendPrivateMessage(new TranslatableText("arrowTrajectory.false"));
-                            return 1;
-                        }))
-                )
-                .then(literal("componentVisibility")
-                        .then(literal("line")
-                                .then(literal("true").executes(context -> {
-                                    config.set("lineVisibility", true);
-                                    config.save();
-                                    TrajectoryFabric.remoteLoadConfig();
-                                    sendPrivateMessage(new TranslatableText("lineVisibility.true"));
-                                    return 1;
-                                }))
-                                .then(literal("false").executes(context -> {
-                                    config.set("lineVisibility", false);
-                                    config.save();
-                                    TrajectoryFabric.remoteLoadConfig();
-                                    sendPrivateMessage(new TranslatableText("lineVisibility.false"));
-                                    return 1;
-                                }))
-                        )
-                        .then(literal("box")
-                                .then(literal("true").executes(context -> {
-                                    config.set("boxVisibility", true);
-                                    config.save();
-                                    TrajectoryFabric.remoteLoadConfig();
-                                    sendPrivateMessage(new TranslatableText("boxVisibility.true"));
-                                    return 1;
-                                }))
-                                .then(literal("false").executes(context -> {
-                                    config.set("boxVisibility", false);
-                                    config.save();
-                                    TrajectoryFabric.remoteLoadConfig();
-                                    sendPrivateMessage(new TranslatableText("boxVisibility.false"));
-                                    return 1;
-                                }))
-                        )
-                        .then(literal("approxBox")
-                                .then(literal("true").executes(context -> {
-                                    config.set("approxBoxVisibility", true);
-                                    config.save();
-                                    TrajectoryFabric.remoteLoadConfig();
-                                    sendPrivateMessage(new TranslatableText("approxBoxVisibility.true"));
-                                    return 1;
-                                }))
-                                .then(literal("false").executes(context -> {
-                                    config.set("approxBoxVisibility", false);
-                                    config.save();
-                                    TrajectoryFabric.remoteLoadConfig();
-                                    sendPrivateMessage(new TranslatableText("approxBoxVisibility.false"));
-                                    return 1;
-                                }))
-                        )
-                )
-                .then(literal("lineOrigin")
-                        .then(literal("left").executes(context -> {
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
+            dispatcher.register(
+                    ClientCommandManager.literal("trajectory")
+                    .then(ClientCommandManager.literal("lineColor")
+                            .then(ClientCommandManager.argument("red", IntegerArgumentType.integer(0, 255))
+                                    .then(ClientCommandManager.argument("green", IntegerArgumentType.integer(0, 255))
+                                            .then(ClientCommandManager.argument("blue", IntegerArgumentType.integer(0, 255))
+                                                    .then(ClientCommandManager.argument("alpha", IntegerArgumentType.integer(0, 100)).executes(context -> {
+                                                                config.set("lineColorR", getInteger(context, "red"));
+                                                                config.set("lineColorG", getInteger(context, "green"));
+                                                                config.set("lineColorB", getInteger(context, "blue"));
+                                                                config.set("lineColorA", getInteger(context, "alpha"));
+                                                                config.save();
+                                                                TrajectoryFabric.remoteLoadConfig();
+                                                                sendPrivateMessage(Text.translatable("lineColor.set", describeColor(getInteger(context, "red"), getInteger(context, "green"), getInteger(context, "blue"))));
+                                                                return 1;
+                                                            })
+
+                                                    )))))
+                    .then(ClientCommandManager.literal("arrowTrajectory")
+                            .then(ClientCommandManager.literal("true").executes(context -> {
+                                config.set("arrowTrajectory", true);
+                                config.save();
+                                TrajectoryFabric.remoteLoadConfig();
+                                sendPrivateMessage(Text.translatable("arrowTrajectory.true"));
+                                return 1;
+                            }))
+                            .then(ClientCommandManager.literal("false").executes(context -> {
+                                config.set("arrowTrajectory", false);
+                                config.save();
+                                TrajectoryFabric.remoteLoadConfig();
+                                sendPrivateMessage(Text.translatable("arrowTrajectory.false"));
+                                return 1;
+                            }))
+                    )
+                    .then(ClientCommandManager.literal("componentVisibility")
+                            .then(ClientCommandManager.literal("line")
+                                    .then(ClientCommandManager.literal("true").executes(context -> {
+                                        config.set("lineVisibility", true);
+                                        config.save();
+                                        TrajectoryFabric.remoteLoadConfig();
+                                        sendPrivateMessage(Text.translatable("lineVisibility.true"));
+                                        return 1;
+                                    }))
+                                    .then(ClientCommandManager.literal("false").executes(context -> {
+                                        config.set("lineVisibility", false);
+                                        config.save();
+                                        TrajectoryFabric.remoteLoadConfig();
+                                        sendPrivateMessage(Text.translatable("lineVisibility.false"));
+                                        return 1;
+                                    }))
+                            )
+                            .then(ClientCommandManager.literal("box")
+                                    .then(ClientCommandManager.literal("true").executes(context -> {
+                                        config.set("boxVisibility", true);
+                                        config.save();
+                                        TrajectoryFabric.remoteLoadConfig();
+                                        sendPrivateMessage(Text.translatable("boxVisibility.true"));
+                                        return 1;
+                                    }))
+                                    .then(ClientCommandManager.literal("false").executes(context -> {
+                                        config.set("boxVisibility", false);
+                                        config.save();
+                                        TrajectoryFabric.remoteLoadConfig();
+                                        sendPrivateMessage(Text.translatable("boxVisibility.false"));
+                                        return 1;
+                                    }))
+                            )
+                            .then(ClientCommandManager.literal("approxBox")
+                                    .then(ClientCommandManager.literal("true").executes(context -> {
+                                        config.set("approxBoxVisibility", true);
+                                        config.save();
+                                        TrajectoryFabric.remoteLoadConfig();
+                                        sendPrivateMessage(Text.translatable("approxBoxVisibility.true"));
+                                        return 1;
+                                    }))
+                                    .then(ClientCommandManager.literal("false").executes(context -> {
+                                        config.set("approxBoxVisibility", false);
+                                        config.save();
+                                        TrajectoryFabric.remoteLoadConfig();
+                                        sendPrivateMessage(Text.translatable("approxBoxVisibility.false"));
+                                        return 1;
+                                    }))
+                            )
+                    )
+                    .then(ClientCommandManager.literal("lineOrigin")
+                            .then(ClientCommandManager.literal("left").executes(context -> {
                                 config.set("lineOrigin", 1);
                                 config.save();
                                 TrajectoryFabric.remoteLoadConfig();
-                                sendPrivateMessage(new TranslatableText("lineOrigin.left"));
+                                sendPrivateMessage(Text.translatable("lineOrigin.left"));
                                 return 1;
-                        }))
-                        .then(literal("auto").executes(context -> {
+                            }))
+                            .then(ClientCommandManager.literal("auto").executes(context -> {
                                 config.set("lineOrigin", 2);
                                 config.save();
                                 TrajectoryFabric.remoteLoadConfig();
-                                sendPrivateMessage(new TranslatableText("lineOrigin.auto"));
+                                sendPrivateMessage(Text.translatable("lineOrigin.auto"));
                                 return 1;
-                        }))
-                        .then(literal("right").executes(context -> {
-                            config.set("lineOrigin", 3);
-                            config.save();
-                            TrajectoryFabric.remoteLoadConfig();
-                            sendPrivateMessage(new TranslatableText("lineOrigin.right"));
-                            return 1;
-                        }))
-                )
-        );
+                            }))
+                            .then(ClientCommandManager.literal("right").executes(context -> {
+                                config.set("lineOrigin", 3);
+                                config.save();
+                                TrajectoryFabric.remoteLoadConfig();
+                                sendPrivateMessage(Text.translatable("lineOrigin.right"));
+                                return 1;
+                            }))
+                    )
+
+            );
+        });
     }
 
     // https://github.com/AMereBagatelle/AFKPeace/blob/1.16.x/src/main/java/amerebagatelle/github/io/afkpeace/commands/ConfigCommand.java
-    public void sendPrivateMessage(Text message) {
+    public static void sendPrivateMessage(Text message) {
         MinecraftClient mc = MinecraftClient.getInstance();
-        mc.inGameHud.addChatMessage(MessageType.SYSTEM, message, mc.player.getUuid());
+        mc.inGameHud.getChatHud().addMessage( message);
     }
 
-    public FileConfig getConfigReference() {
+    public static FileConfig getConfigReference() {
         return TrajectoryFabric.getConfigRef();
     }
 
-    public String describeColor(int r, int g, int b) {
+    public static String describeColor(int r, int g, int b) {
         double lastSmallestDistance = Double.MAX_VALUE;
         String returnColor = "null";
         for (int i = 0, color_i = 0; color_i < colorNames.length; i=i+3, color_i++) {
@@ -165,7 +166,7 @@ public class TrajectoryCommands implements ClientCommandPlugin {
         return returnColor;
     }
 
-    String[] colorNames = {
+    static String[] colorNames = {
             "maroon",
             "dark red",
             "brown",
@@ -307,7 +308,7 @@ public class TrajectoryCommands implements ClientCommandPlugin {
             "white"
     };
 
-  int[] colorRGBs = {
+    static int[] colorRGBs = {
         128,0,0,
         139,0,0,
         165,42,42,
