@@ -28,7 +28,6 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.util.math.Box;
 
 //Code snippets from https://github.com/shedaniel/LightOverlay/blob/1.16/src/main/java/me/shedaniel/lightoverlay/fabric/LightOverlay.java
@@ -40,7 +39,7 @@ import net.minecraft.util.math.Box;
 public class TrajectoryFabric implements ClientModInitializer {
 
 	final boolean smoothLines = true;
-	static File configFile = new File(FabricLoader.getInstance().getConfigDir() + "/trajectoryconfig.json");
+	static File configFile = new File(FabricLoader.getInstance().getConfigDirectory() + "/trajectoryconfig.json");
 	static FileConfig config = FileConfig.of(configFile);
 	static double angleToHit = 0;
 
@@ -168,7 +167,7 @@ public class TrajectoryFabric implements ClientModInitializer {
 		spec.defineInRange("lineColorB", 255, 0, 255);
 		spec.defineInRange("lineColorA", 100, 0, 100);
 
-		System.out.println(FabricLoader.getInstance().getConfigDir());
+		System.out.println(FabricLoader.getInstance().getConfigDirectory());
 
 		if (!spec.isCorrect(config)) {
 			System.out.println("Config incorrect! resetting...");
@@ -223,7 +222,7 @@ public class TrajectoryFabric implements ClientModInitializer {
 			ItemStack itemStack = playerEntity.getMainHandStack();
 			ItemStack itemStackAlt = playerEntity.getOffHandStack();
 
-			// Set mainHand to true/false based on which hand is holding an item which is a projectile.
+			// Set mainHand to true/false based on which hand is holding a item which is a projectile.
 			boolean mainHand = true;
 			if (itemsSimple.contains(itemStack.getItem()) || itemsComplex.contains(itemStack.getItem())) { mainHand = true; }
 			else if (itemsSimple.contains(itemStackAlt.getItem()) || itemsComplex.contains(itemStackAlt.getItem())) { mainHand = false; };

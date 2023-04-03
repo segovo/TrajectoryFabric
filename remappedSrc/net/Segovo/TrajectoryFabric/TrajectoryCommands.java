@@ -2,21 +2,17 @@ package net.Segovo.TrajectoryFabric;
 
 import com.electronwill.nightconfig.core.file.FileConfig;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.Message;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.network.MessageType;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.text.Texts;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import java.awt.*;
 import java.io.File;
 
 import static com.mojang.brigadier.arguments.IntegerArgumentType.getInteger;
-//import net.fabricmc.fabric.api.client.command.v1.ClientCommandRegistrationCallback;
-import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 
 //###########
 //Registers the commands and defines their functionality.
@@ -28,7 +24,8 @@ public class TrajectoryCommands  {
 
     public static void registerCommands() {
 
-        ClientCommandManager.DISPATCHER.register(
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
+            dispatcher.register(
                     ClientCommandManager.literal("trajectory")
                     .then(ClientCommandManager.literal("lineColor")
                             .then(ClientCommandManager.argument("red", IntegerArgumentType.integer(0, 255))
@@ -41,7 +38,7 @@ public class TrajectoryCommands  {
                                                                 config.set("lineColorA", getInteger(context, "alpha"));
                                                                 config.save();
                                                                 TrajectoryFabric.remoteLoadConfig();
-                                                                sendPrivateMessage(new TranslatableText("lineColor.set", describeColor(getInteger(context, "red"), getInteger(context, "green"), getInteger(context, "blue"))));
+                                                                sendPrivateMessage(Text.translatable("lineColor.set", describeColor(getInteger(context, "red"), getInteger(context, "green"), getInteger(context, "blue"))));
                                                                 return 1;
                                                             })
 
@@ -51,14 +48,14 @@ public class TrajectoryCommands  {
                                 config.set("arrowTrajectory", true);
                                 config.save();
                                 TrajectoryFabric.remoteLoadConfig();
-                                sendPrivateMessage(new TranslatableText("arrowTrajectory.true"));
+                                sendPrivateMessage(Text.translatable("arrowTrajectory.true"));
                                 return 1;
                             }))
                             .then(ClientCommandManager.literal("false").executes(context -> {
                                 config.set("arrowTrajectory", false);
                                 config.save();
                                 TrajectoryFabric.remoteLoadConfig();
-                                sendPrivateMessage(new TranslatableText("arrowTrajectory.false"));
+                                sendPrivateMessage(Text.translatable("arrowTrajectory.false"));
                                 return 1;
                             }))
                     )
@@ -68,14 +65,14 @@ public class TrajectoryCommands  {
                                         config.set("lineVisibility", true);
                                         config.save();
                                         TrajectoryFabric.remoteLoadConfig();
-                                        sendPrivateMessage(new TranslatableText("lineVisibility.true"));
+                                        sendPrivateMessage(Text.translatable("lineVisibility.true"));
                                         return 1;
                                     }))
                                     .then(ClientCommandManager.literal("false").executes(context -> {
                                         config.set("lineVisibility", false);
                                         config.save();
                                         TrajectoryFabric.remoteLoadConfig();
-                                        sendPrivateMessage(new TranslatableText("lineVisibility.false"));
+                                        sendPrivateMessage(Text.translatable("lineVisibility.false"));
                                         return 1;
                                     }))
                             )
@@ -84,14 +81,14 @@ public class TrajectoryCommands  {
                                         config.set("boxVisibility", true);
                                         config.save();
                                         TrajectoryFabric.remoteLoadConfig();
-                                        sendPrivateMessage(new TranslatableText("boxVisibility.true"));
+                                        sendPrivateMessage(Text.translatable("boxVisibility.true"));
                                         return 1;
                                     }))
                                     .then(ClientCommandManager.literal("false").executes(context -> {
                                         config.set("boxVisibility", false);
                                         config.save();
                                         TrajectoryFabric.remoteLoadConfig();
-                                        sendPrivateMessage(new TranslatableText("boxVisibility.false"));
+                                        sendPrivateMessage(Text.translatable("boxVisibility.false"));
                                         return 1;
                                     }))
                             )
@@ -100,14 +97,14 @@ public class TrajectoryCommands  {
                                         config.set("approxBoxVisibility", true);
                                         config.save();
                                         TrajectoryFabric.remoteLoadConfig();
-                                        sendPrivateMessage(new TranslatableText("approxBoxVisibility.true"));
+                                        sendPrivateMessage(Text.translatable("approxBoxVisibility.true"));
                                         return 1;
                                     }))
                                     .then(ClientCommandManager.literal("false").executes(context -> {
                                         config.set("approxBoxVisibility", false);
                                         config.save();
                                         TrajectoryFabric.remoteLoadConfig();
-                                        sendPrivateMessage(new TranslatableText("approxBoxVisibility.false"));
+                                        sendPrivateMessage(Text.translatable("approxBoxVisibility.false"));
                                         return 1;
                                     }))
                             )
@@ -117,27 +114,27 @@ public class TrajectoryCommands  {
                                 config.set("lineOrigin", 1);
                                 config.save();
                                 TrajectoryFabric.remoteLoadConfig();
-                                sendPrivateMessage(new TranslatableText("lineOrigin.left"));
+                                sendPrivateMessage(Text.translatable("lineOrigin.left"));
                                 return 1;
                             }))
                             .then(ClientCommandManager.literal("auto").executes(context -> {
                                 config.set("lineOrigin", 2);
                                 config.save();
                                 TrajectoryFabric.remoteLoadConfig();
-                                sendPrivateMessage(new TranslatableText("lineOrigin.auto"));
+                                sendPrivateMessage(Text.translatable("lineOrigin.auto"));
                                 return 1;
                             }))
                             .then(ClientCommandManager.literal("right").executes(context -> {
                                 config.set("lineOrigin", 3);
                                 config.save();
                                 TrajectoryFabric.remoteLoadConfig();
-                                sendPrivateMessage(new TranslatableText("lineOrigin.right"));
+                                sendPrivateMessage(Text.translatable("lineOrigin.right"));
                                 return 1;
                             }))
                     )
 
             );
-
+        });
     }
 
     // https://github.com/AMereBagatelle/AFKPeace/blob/1.16.x/src/main/java/amerebagatelle/github/io/afkpeace/commands/ConfigCommand.java
