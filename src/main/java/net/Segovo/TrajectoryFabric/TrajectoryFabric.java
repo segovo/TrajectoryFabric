@@ -193,12 +193,12 @@ public class TrajectoryFabric implements ClientModInitializer {
 		WorldRenderEvents.AFTER_ENTITIES.register((WorldRenderContext context) -> {
 			MatrixStack stack = context.matrixStack();
 
-			RenderSystem.setShader(GameRenderer::getPositionColorShader);
+			RenderSystem.setShader(GameRenderer::getPositionColorProgram);
 			RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
 			RenderSystem.depthMask(false);
 			RenderSystem.enableBlend();
 			RenderSystem.defaultBlendFunc();
-			RenderSystem.disableTexture();
+			//RenderSystem.disableTexture();
 			if (smoothLines) GL11.glEnable(GL11.GL_LINE_SMOOTH);
 
 			stack.push();
@@ -216,7 +216,7 @@ public class TrajectoryFabric implements ClientModInitializer {
 
 			PlayerEntity playerEntity = client.player;
 			World world = client.world;
-			BlockPos blockPos = new BlockPos(playerEntity.getX(), playerEntity.getY(), playerEntity.getZ());
+			BlockPos blockPos = new BlockPos((int)playerEntity.getX(), (int)playerEntity.getY(), (int)playerEntity.getZ());
 			float pitch = playerEntity.getPitch();
 			float yaw = playerEntity.getYaw();
 			double eye = playerEntity.getEyeY();
@@ -258,7 +258,7 @@ public class TrajectoryFabric implements ClientModInitializer {
 			RenderSystem.setShaderColor(1, 1, 1, 1);
 
 			RenderSystem.disableBlend();
-			RenderSystem.enableTexture();
+			//RenderSystem.enableTexture();
 			if (smoothLines) GL11.glDisable(GL11.GL_LINE_SMOOTH);
 		});
 		TrajectoryCommands.registerCommands();
