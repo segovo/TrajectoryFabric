@@ -3,11 +3,9 @@ package net.Segovo.TrajectoryFabric;
 //shamelessly ripped from https://github.com/ate47/Xray/blob/fabric-1.19/src/main/java/fr/atesab/xray/utils/RenderUtils.java
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
-//import net.minecraft.util.math.Vec3f;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-
 
 public class RenderUtils {
 
@@ -29,8 +27,5 @@ public class RenderUtils {
                 .normal(matrix3f, normalX, normalY, normalZ).next();
         buffer.vertex(matrix4f, x2, y2, z2).color(r, g, b, a)
                 .normal(matrix3f, normalX, normalY, normalZ).next();
-    }
-
-    private RenderUtils() {
     }
 }
