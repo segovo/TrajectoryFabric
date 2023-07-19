@@ -101,6 +101,10 @@ public class TrajectoryFabric implements ClientModInitializer {
 			playerside = (mainHand ? 1 : -1);
 		}
 
+		var preferredHand = MinecraftClient.getInstance().player.getMainArm();
+		if (preferredHand.getId()==0){
+			playerside = playerside*(-1);
+		}
 		double offsetX = 0 * Math.cos(Math.toRadians((yaw + 90) * -1)) + playerside * Math.sin(Math.toRadians((yaw + 90) * -1));
 		double offsetZ = 0 * Math.sin(Math.toRadians((yaw + 90) * -1)) + playerside * Math.cos(Math.toRadians((yaw + 90) * -1));
 
@@ -228,14 +232,14 @@ public class TrajectoryFabric implements ClientModInitializer {
 			else if (itemsSimple.contains(itemStackAlt.getItem()) || itemsComplex.contains(itemStackAlt.getItem())) { mainHand = false; };
 
 			if (itemsSimple.contains(itemStack.getItem()) || itemsSimple.contains(itemStackAlt.getItem())) {
-				System.out.println("A");
+				//System.out.println("A");
 				float speed = 1.5f;
 				int[] color = getConfigColor();
 				boolean[] booleans = getConfigBooleans();
 				int[] integers = getConfigIntegers();
 				TrajectoryFabric.renderCurve(stack, buffer, camera, world, blockPos, pitch, yaw, eye, playerEntity, color, speed, 0.03f, booleans, integers, mainHand);
 			} else if (itemsComplex.contains(itemStack.getItem()) ||  itemsComplex.contains(itemStackAlt.getItem()) && ((boolean)config.get("arrowTrajectory"))) {
-				System.out.println("B");
+				//System.out.println("B");
 				float bowMultiplier = (72000.0f - playerEntity.getItemUseTimeLeft()) / 20.0f;
 				bowMultiplier = (bowMultiplier * bowMultiplier + bowMultiplier * 2.0f) / 3.0f;
 				if (bowMultiplier > 1.0f) {
