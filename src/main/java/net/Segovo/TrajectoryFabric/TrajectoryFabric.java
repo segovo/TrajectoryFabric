@@ -190,7 +190,7 @@ public class TrajectoryFabric implements ClientModInitializer {
 
 		MinecraftClient client = MinecraftClient.getInstance();
 
-		WorldRenderEvents.AFTER_ENTITIES.register((WorldRenderContext context) -> {
+		WorldRenderEvents.END.register((WorldRenderContext context) -> {
 			MatrixStack stack = context.matrixStack();
 
 			RenderSystem.setShader(GameRenderer::getPositionColorProgram);
@@ -198,7 +198,6 @@ public class TrajectoryFabric implements ClientModInitializer {
 			RenderSystem.depthMask(false);
 			RenderSystem.enableBlend();
 			RenderSystem.defaultBlendFunc();
-			//RenderSystem.disableTexture();
 			if (smoothLines) GL11.glEnable(GL11.GL_LINE_SMOOTH);
 
 			stack.push();
